@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="ja">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>音声支援体験(AI音声支援)</title>
     <base target="_top">
     <style>
       /* --- 高齢者向けスマートフォンUIスタイル --- */
@@ -470,7 +473,7 @@
   <script>
     'use strict';
 
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwdWqLn6Sv2xdZHKDQWoJEg3wswzCvMzAPwX0t_X6XD1opI5faoTKBZW7CRSVS0GQXn/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxjsGlZPuj7ERdansXBig0oNPAqGL2QPVVrI6QubgbDKfekWyvHei_7mVXeDUmf0-q3/exec';
 
     // GASのAPIを呼ぶ共通関数
     async function callGas(action, payload) {
@@ -771,15 +774,15 @@
         入力確認: 0
       }
     };
-    function updateStepName(stepName){
+    function updateStepName(newStepName){
       const now = new Date();
-      if(tracker.nowName && tracker.timeStart) {
-        const elapsedSeconds = ((now - tracker.timeStart) / 1000).toFixed(2);
-        if(tracker.durations.hasOwnProperty(tracker.nowName)) {
-          tracker.durations[tracker.nowName] += Number(elapsedSeconds);
+      if (tracker.nowName && tracker.timeStart) {
+        const elapsedSeconds = (now - tracker.timeStart) / 1000;  // 数値のまま足す
+        if (tracker.durations.hasOwnProperty(tracker.nowName)) {
+          tracker.durations[tracker.nowName] += elapsedSeconds;
         }
       }
-      tracker.nowName = stepName;
+      tracker.nowName = newStepName;
       tracker.timeStart = now;
     }
 
