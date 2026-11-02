@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ja">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>音声支援体験(AI音声支援)</title>
     <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音声支援体験会(音声支援)</title>
     <style>
       /* --- 高齢者向けスマートフォンUIスタイル --- */
-      
+
       /* 全体設定 */
       * {
         box-sizing: border-box;
@@ -19,11 +19,11 @@
         color: #222222; /* コントラストの強い濃い文字色 */
         background-color: #f8f9fa;
         margin: 0;
-        padding: 16px;
+        padding: 16px 16px 110px; /* 下は「案内を聞く」ボタンに隠れないよう余白 */
       }
 
       /* コンテナ（カード風デザインで視線を集める） */
-      #homeArea, #menuArea, #dummyArea, #inputArea, #confirmArea, #compArea{
+      #homeArea, #menuArea, #dummyArea, #inputArea, #confirmArea, #compArea {
         background-color: #ffffff;
         border: 1px solid #cccccc;
         border-radius: 12px;
@@ -39,7 +39,7 @@
 
       /* リタイアボタン */
       #retireBtn {
-        position: fixed; 
+        position: fixed;
         top: 20px;
         right: 20px;
         z-index: 1000;
@@ -63,36 +63,6 @@
         box-shadow: 0 0 1px rgba(0, 0, 0, 0.15);
         border-bottom: none;
       }
-
-      /* AIアシスタント */
-      body { padding-bottom: 300px; }  /* AIエリアで隠れないように */
-      
-      #aiArea {
-        position: fixed;
-        bottom: 0;
-        left: 0; right: 0;
-        z-index: 1002;                 /* メニュー表示中も使えるように */
-        background-color: #ffffff;
-        border-top: 2px solid #cccccc;
-        padding: 12px 16px;
-        box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.08);
-      }
-      #aiArea > * { max-width: 500px; margin-left: auto; margin-right: auto; }
-      #voiceBtn { background-color: #2b8000; box-shadow: 0 4px 0 #084d14; }
-      #aiText {
-        margin: 12px auto;
-        padding: 10px 12px;
-        min-height: 64px;
-        max-height: 25vh;
-        overflow-y: auto;
-        background-color: #f0f7ec;
-        border: 1px solid #9cc58a;
-        border-radius: 8px;
-        white-space: pre-wrap;
-      }
-      .ai-text-row { display: flex; gap: 8px; }
-      .ai-text-row input { margin-bottom: 0; }
-      .ai-text-row button { width: 90px; min-height: 52px; font-size: 18px; }
 
       /* 見出し・テキスト */
       h1 {
@@ -149,7 +119,7 @@
         padding: 55px 14px 20px;
 
         background-color: #0055b8;
-        
+
         /* 初期状態は非表示 */
         transform: translateX(-100%);
         visibility: hidden;
@@ -162,43 +132,45 @@
         transform: translateX(0);
         visibility: visible;
       }
-      
+
       /* 閉じるボタン */
       .menu-close {
         position: absolute;
         top: 8px;
         left: 12px;
-        
+
         padding: 0;
         border: none;
         background: transparent;
         color: #fff;
-        
+
         font-size: 32px;
         font-weight: bold;
         line-height: 1;
         cursor: pointer;
       }
-      
+
       /* リンク一覧 */
       .menu ul {
         list-style: none;
         padding: 0;
         margin: 0;
       }
-      
+
       .menu li {
         margin-top: 15px;
         margin-bottom: 5px;
       }
-      
+
       .menu div {
         color: #fff;
         font-size: 32px;
         text-decoration: underline;
         cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 8px;
       }
-      
+
       /* メニュー表示中は三本線を隠す */
       .menu-open .menu-toggle {
         display: none;
@@ -207,6 +179,10 @@
       /* フォームグループ */
       .form-group {
         margin-bottom: 24px;
+        padding: 12px;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        transition: background-color 0.3s, border-color 0.3s;
       }
       label {
         display: block;
@@ -231,13 +207,16 @@
         outline: 3px solid rgba(0, 85, 184, 0.3);
       }
 
-      /* 名前欄（姓・名を横並びにするレイアウト） */
-      .name-group {
+      /* 年齢欄（入力欄と「歳」を横並び） */
+      .year-row {
         display: flex;
-        gap: 12px;
+        align-items: center;
+        gap: 8px;
       }
-      .name-group > div {
-        flex: 1;
+      .year-row span {
+        font-weight: bold;
+        font-size: 20px;
+        white-space: nowrap;
       }
 
       /* チェックボックス（押しやすく巨大化） */
@@ -332,28 +311,124 @@
       }
 
       /* エラー・警告メッセージ */
-      #agreementMessage, #statusMessage {
+      #agreementMessage, #statusMessage, #inputMessage {
         color: #d93025;
         font-weight: bold;
         margin-top: 12px;
+        margin-bottom: 12px;
         text-align: center;
+      }
+
+      /* --- 音声案内：「案内を聞く」ボタン（右下に固定） --- */
+      #speakBtn {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        z-index: 1002; /* メニューを開いていても押せるように */
+        width: auto;
+        min-height: 64px;
+        padding: 0 22px;
+        font-size: 20px;
+        border-radius: 32px;
+        background-color: #2e7d32;
+        box-shadow: 0 4px 0 #1b5e20;
+      }
+      #speakBtn:active {
+        box-shadow: 0 2px 0 #1b5e20;
+      }
+
+      /* --- AIに声で質問する（画面下に固定） --- */
+      #aiArea {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1002; /* メニューを開いていても押せるように */
+        background-color: #ffffff;
+        border-top: 3px solid #d0d0d0;
+        padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+        box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.06);
+      }
+      .ai-inner {
+        max-width: 500px;
+        margin: 0 auto;
+      }
+      #micBtn {
+        min-height: 64px;
+        font-size: 24px;
+        border-radius: 12px;
+        background-color: #467f24;
+        box-shadow: 0 6px 0 #2c5418;
+      }
+      #micBtn:active {
+        box-shadow: 0 3px 0 #2c5418;
+      }
+      #micBtn.listening {
+        background-color: #d32f2f;
+        box-shadow: 0 6px 0 #8e1b1b;
+        animation: mic-pulse 1.2s ease-in-out infinite;
+      }
+      #micBtn.thinking {
+        background-color: #888888;
+        box-shadow: 0 6px 0 #555555;
+      }
+      @keyframes mic-pulse {
+        0%, 100% { opacity: 1; }
+        50%      { opacity: 0.75; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #micBtn.listening { animation: none; }
+      }
+      #aiBubble {
+        margin-top: 14px;
+        background-color: #f1f6ee;
+        border: 2px solid #a9c99a;
+        border-radius: 12px;
+        padding: 12px 14px;
+        max-height: 30vh;
+        overflow-y: auto;
+      }
+      #aiQuestion {
+        font-size: 16px;
+        color: #555555;
+        margin-bottom: 6px;
+      }
+      #aiAnswer {
+        font-size: 20px;
+        line-height: 1.6;
       }
 
       /* --- アクティブな入力エリアのハイライトスタイル --- */
       .highlight-active {
         background-color: #fffde7 !important; /* 目立ちやすい薄い黄色 */
         border: 3px solid #fbc02d !important;
-        box-shadow: 0 0 10px rgba(251, 192, 45, 0.5) !important;
         color: #000000 !important;
+        box-shadow: 0 0 10px rgba(251, 192, 45, 0.5);
+        animation: hl-pulse 1.6s ease-in-out infinite; /* ゆっくり点滅して視線を誘導 */
+      }
+      @keyframes hl-pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0.9); }
+        50%      { box-shadow: 0 0 0 10px rgba(251, 192, 45, 0); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .highlight-active { animation: none; }
+      }
+      /* メニューボタン（三本線）をハイライトした時は線を黒にして見えるように */
+      .menu-toggle.highlight-active {
+        background-color: #fbc02d !important;
+      }
+      .menu-toggle.highlight-active span {
+        background-color: #000000;
       }
     </style>
   </head>
   <body>
     <div id="homeArea">
       <!--ホーム-->
-      <p>これから実験を始めます。了承いただける場合は、「同意する」にチェックをいれてください。</p>
+      <p>体験会を始めます。「同意する」にチェックを入れて、「はじめる」を押してください。</p>
+      <font color="red">中断する場合は右上の中断ボタンを押してください。</font>
       <form action="#" id="agreementForm">
-        <label><input type="checkbox" id="agreementCheck">同意する</label>
+        <label class="checkbox-label" id="agreeLabel"><input type="checkbox" id="agreementCheck">同意する</label>
         <div id="agreementMessage"></div>
         <button type="submit" id="startBtn">はじめる</button>
       </form>
@@ -368,7 +443,7 @@
         <p>左上のメニューバーから、あなたのグループを選択して、入力ページに進んでください。</p>
       </div>
     </div>
-    
+
     <div class="hamburger" id="hamburgerMenu" style="display: none;">
       <button type="button" class="menu-toggle" aria-label="メニューを開く" aria-expanded="false" aria-controls="menu">
         <span></span>
@@ -398,24 +473,28 @@
         <div class="form-group" id="group-name">
           <p>お名前を入力してください。</p>
           <label for="lname">姓</label>
-          <input type="text" id="lname" class="" placeholder="姓" required>
+          <input type="text" id="lname" placeholder="姓" data-label="姓" enterkeyhint="next" required>
           <label for="fname">名</label>
-          <input type="text" id="fname" class="" placeholder="名" required>
+          <input type="text" id="fname" placeholder="名" data-label="名" enterkeyhint="next" required>
         </div>
 
         <!--年齢-->
         <div class="form-group" id="group-year">
-          <label>現在の年齢を入力してください。</label>
-          <input type="text" id="year" class="" placeholder="年齢" pattern="^[0-9\uff10-\uff19]+$" inputmode="numeric" required> 歳
+          <label for="year">現在の年齢を入力してください。</label>
+          <div class="year-row">
+            <input type="text" id="year" placeholder="年齢" pattern="^[0-9\uff10-\uff19]+$" inputmode="numeric" data-label="年齢" enterkeyhint="next" required>
+            <span>歳</span>
+          </div>
         </div>
 
         <!--写真-->
         <div class="form-group" id="group-photo">
-          <label>写真をアップロードしてください。</label>
-          <input type="file" id="uploadPhoto" accept="image/png, image/jpeg" class="" required>
-          <img id="preview" src=""> <!--プレビュー画像表示欄-->
+          <label for="uploadPhoto">写真をアップロードしてください。</label>
+          <input type="file" id="uploadPhoto" accept="image/png, image/jpeg" data-label="写真" required>
+          <img id="preview" src="" alt="選んだ写真"> <!--プレビュー画像表示欄-->
         </div>
 
+        <div id="inputMessage" role="alert"></div>
         <button type="submit" class="btn" id="confBtn">確認画面へ進む</button>
       </form>
     </div>
@@ -441,9 +520,14 @@
         <img id="confirmPhoto" src="" alt="送信写真">
       </div>
 
+      <div id="conf-check">
+        <label><input type="checkbox" id="confCheck">確認しました</label>
+        <div id="confMessage"></div>
+      </div>
+
       <div class="btn2">
-        <button id="backBtn" class="">修正する</button>
-        <button id="submitBtn" class="">送信</button>
+        <button id="backBtn" type="button">修正する</button>
+        <button id="submitBtn" type="button">送信</button>
       </div>
     </div>
     <div id="statusMessage"></div>
@@ -459,13 +543,17 @@
       <button id="retireBtn" type="button" formnovalidate>中止する</button>
     </div>
 
-    <!--AIアシスタント-->
-    <div id="aiArea" style="display: none;">
-      <button id="voiceBtn" type="button">🎤 声で質問する</button>
-      <div id="aiText">わからないことがあれば、ボタンを押して話しかけてください。</div>
-      <div class="ai-text-row">
-        <input type="text" id="aiInput" placeholder="文字で質問する場合はこちら">
-        <button id="aiSendBtn" type="button">送る</button>
+    <!--音声案内をもう一度聞くボタン-->
+    <button id="speakBtn" type="button" aria-label="音声案内を聞く">🔊 案内を聞く</button>
+
+    <!--AIに声で質問する-->
+    <div id="aiArea" role="region" aria-label="AIに声で質問する">
+      <div class="ai-inner">
+        <button id="micBtn" type="button">🎤 声で質問する</button>
+        <div id="aiBubble" aria-live="polite">
+          <div id="aiQuestion" hidden></div>
+          <div id="aiAnswer">わからないことがあれば、ボタンを押して話しかけてください。</div>
+        </div>
       </div>
     </div>
   </body>
@@ -473,22 +561,54 @@
   <script>
     'use strict';
 
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxjsGlZPuj7ERdansXBig0oNPAqGL2QPVVrI6QubgbDKfekWyvHei_7mVXeDUmf0-q3/exec';
+    /* =========================================================
+     * 設定
+     * ========================================================= */
+    const GROUP_NAME = 'グループA';   // このページのグループ（スプレッドシートにも送信）
+    const HIGHLIGHT_OWN_GROUP = true;  // メニュー内で正解のグループをハイライトするか（実験条件に応じて false に）
+    const REPEAT_INTERVAL_MS = 10000;  // 読み上げ終了から次の繰り返しまでの間隔（ミリ秒）
+    const SHOW_REPLAY_BUTTON = false;  // 右下の「案内を聞く」ボタンを表示するか（AI質問ボタンと併用する場合は true）
+    const AI_TIMEOUT_MS = 25000;       // AIの返事を待つ最大時間（ミリ秒）
+    const LISTEN_MAX_MS = 15000;       // 1回の質問で聞き取る最大時間（ミリ秒）
 
-    // GASのAPIを呼ぶ共通関数
-    async function callGas(action, payload) {
-      const res = await fetch(GAS_URL, {
-        method: 'POST',
-        // ★text/plain にするのが重要。JSONにするとCORSのプリフライトで失敗する
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(Object.assign({ action: action }, payload))
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return await res.json();
-    }
+    // GitHub Pages で公開する時だけ使う：GASを「ウェブアプリ」としてデプロイしたURL
+    // （GASのページとして開いている間は google.script.run が使われるので不要）
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwxg_2xRxeb-98j75ghkB6GZXRvvGwH1zX_TGBCpP-wWWMX7wbfcgI13wSsAcirlliQ/exec';
 
+    /* =========================================================
+     * 音声案内の文章（原案はここを書き換えるだけで反映されます）
+     * ========================================================= */
+    const GUIDE = {
+      home:        'これから体験会を始めます。中断する場合は、右上の赤いボタンを押してください。体験会にご了承いただける場合は、「同意する」の四角を押して、チェックを入れてください。',
+      agreed:      '同意にチェックが入りました。下の「はじめる」ボタンを押してください。',
+      needAgree:   '「同意する」にチェックが入っていません。「同意する」の四角を押してから、「はじめる」ボタンを押してください。',
+      menu:        `あなたは、${GROUP_NAME}です。画面の左上にある、三本線のメニューボタンを押してください。`,
+      menuOpen:    `メニューが開きました。グループA、グループB、グループCの、3つが並んでいます。あなたのグループ、を押してください。元の画面には上のバツボタンで戻れます。`,
+      dummy:       (name) => `ここは、${name}のページです。違うページが選ばれました。左上のメニューボタンを押して、${GROUP_NAME}を選び直してください。`,
+      input:       '入力画面です。お名前、年齢、写真の、3つを入力します。まず、「姓」の欄を押して、名字を入力してください。',
+      lname:       '「姓」の欄に、名字を入力してください。入力が終わったら、その下の「名」の欄を押してください。',
+      fname:       '「名」の欄に、下のお名前を入力してください。入力が終わったら、「年齢」の欄を押してください。',
+      year:        '「年齢」の欄に、今の年齢を数字で入力してください。入力が終わったら、写真の「ファイルを選択」ボタンを押してください。',
+      photo:       '「ファイルを選択」ボタンを押すと、写真を選べます。送信したい写真を、1枚選んでください。',
+      photoPicking:'写真を選ぶ画面が開きます。送信したい写真を、1枚選んでください。',
+      photoSelected:'写真が選ばれました。画面の下にある、「確認画面へ進む」ボタンを押してください。',
+      required:    (label) => `「${label}」が、まだ入力されていません。黄色く光っているところに入力してください。`,
+      yearInvalid: '年齢は、数字だけで入力してください。例えば、70、のように入力します。',
+      confirm:     (l, f, y) => `入力内容の確認です。お名前は、${l} ${f}さん。年齢は、${y}歳です。写真も表示されています。よろしければ、「確認しました」にチェックを入れて、右下の「送信」ボタンを押してください。直したいところがあれば、左下の「修正する」ボタンを押してください。`,
+      needConf:   '「確認しました」にチェックが入っていません。「確認しました」の四角を押してから、「送信」ボタンを押してください。',
+      back:        '入力画面に戻りました。直したい欄を押して、修正してください。終わったら、「確認画面へ進む」ボタンを押してください。',
+      sending:     '送信しています。画面を触らずに、そのままお待ちください。',
+      complete:    '送信が完了しました。以上で実験は終了です。ご協力ありがとうございました。スタッフを呼んでください。',
+      failed:      '送信に失敗しました。もう一度「送信」ボタンを押すか、スタッフを呼んでください。',
+      retireConfirm:'実験を中断しますか。中断する場合は「OK」、続ける場合は「キャンセル」を押してください。',
+      retiring:    '中断しています。そのままお待ちください。',
+      retired:     '実験を中断しました。スタッフを呼んでください。',
+      retireFailed:'中断の送信に失敗しました。もう一度、右上の「中止する」ボタンを押すか、スタッフを呼んでください。',
+    };
 
-    //エレメント取得
+    /* =========================================================
+     * エレメント取得
+     * ========================================================= */
     const homeArea = document.getElementById('homeArea');     //ホームエリア
     const menuArea = document.getElementById('menuArea');     //メニューエリア
     const dummyArea = document.getElementById('dummyArea');     //ダミーエリア
@@ -497,10 +617,17 @@
     const compArea = document.getElementById('compArea');     //終了エリア
     const hamburgerMenu = document.getElementById('hamburgerMenu');   //ハンバーガーメニュー
 
-    const agreementForm = document.getElementById('agreementForm');   //同意フォーム
     const agreementCheck = document.getElementById('agreementCheck');     //同意するチェック
+    const agreeLabel = document.getElementById('agreeLabel');     //同意するラベル（ハイライト対象）
     const startBtn = document.getElementById('startBtn');     //始めるボタン
     const agreementMessage = document.getElementById('agreementMessage');     //同意してメッセージ
+
+    const toggleBtn = document.querySelector('.menu-toggle');   //三本線ボタン
+    const closeBtn = document.querySelector('.menu-close');     //メニューの×ボタン
+    const menu = document.getElementById('menu');
+    const groupA = document.getElementById('groupA');
+    const groupB = document.getElementById('groupB');
+    const groupC = document.getElementById('groupC');
 
     const dummyMessage = document.getElementById('dummyMessage');     //ダミーページの警告メッセージ
 
@@ -509,13 +636,18 @@
     const fname = document.getElementById('fname');     //名前　入力
     const year = document.getElementById('year');     //年齢　入力
     const uploadPhoto = document.getElementById('uploadPhoto');     //写真 　入力
+    const groupPhoto = document.getElementById('group-photo');     //写真欄（ハイライト対象）
     const preview = document.getElementById('preview');     //写真　入力エリア　プレビュー
+    const inputMessage = document.getElementById('inputMessage');     //入力漏れメッセージ
 
     const confirmLname = document.getElementById('confirmLname');     //苗字　内容確認
     const confirmFname = document.getElementById('confirmFname');     //名前　内容確認
     const confirmYear = document.getElementById('confirmYear');     //年齢　内容確認
     const confirmPhoto = document.getElementById('confirmPhoto');       //写真　内容確認
 
+    const confCheck = document.getElementById('confCheck');   //確認チェックボックス
+    const confMessage = document.getElementById('confMessage');   //確認注意メッセージ
+    const confForcus = document.getElementById('conf-check');
     const confBtn = document.getElementById('confBtn');     //確認遷移ボタン
     const backBtn = document.getElementById('backBtn');     //修正ボタン
     const submitBtn = document.getElementById('submitBtn');     //送信ボタン
@@ -526,239 +658,22 @@
 
     const retireArea = document.getElementById('retireArea');   //リタイアエリア
     const retireBtn = document.getElementById('retireBtn');   //リタイアボタン
-
-    const aiArea = document.getElementById('aiArea');   //AIメッセージエリア
-    const voiceBtn = document.getElementById('voiceBtn');   //AI質問ボタン
-    const aiText = document.getElementById('aiText');   //アドバイス表示
-    const aiInput = document.getElementById('aiInput');
-    const aiSendBtn = document.getElementById('aiSendBtn');
-    let aiHistory = [];   // 会話履歴 [{role:'user'|'model', text}]
-    let aiBusy = false;
+    const speakBtn = document.getElementById('speakBtn');   //案内を聞くボタン
 
     let formData = {};      //フォームデータを保持
     let timeData = {};      //時間計測群
-    let aiLogData = {};     //AI会話ログ
     let missTapCount = 0;     //エリア外タップカウント変数
     let insideMissTapCount = 0;   //エリア内ミスタップカウント変数
     let befroreClick = null;    //エリア内ミスじゃないタップ
-    let startTimeWhole = new Date();     //実行時間計測
+    const startTimeWhole = new Date();     //実行時間計測
     let collaboratorId = null;
     let stepName = 'ホーム';    //攻略ステップの名前
+    let currentDummyName = '';  //表示中のダミーページ名
+    let isRetired = false;      //中断ボタンから送信したか
 
-    //ID発行
-    function formatDateNum(date) {
-      const parts = new Intl.DateTimeFormat('ja-JP', {
-        timeZone: 'Asia/Tokyo',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hourCycle: 'h23'
-      }).formatToParts(date);
-      
-      const values = {};
-      parts.forEach(part => {
-        values[part.type] = part.value;
-      });
-      
-      return values.month + values.day
-      + values.hour + values.minute + values.second;
-    }
-    
-    window.addEventListener('DOMContentLoaded', () => {
-      const dateNum = formatDateNum(new Date());
-      const randomNum = Math.floor(Math.random() * 90) + 10;
-      collaboratorId = dateNum + randomNum.toString();
-      //alert('IDが発行されました：' + collaboratorId);
-    });
-
-    //エリア外ミスタップカウンター
-    document.addEventListener('click', (e) => {
-      if(!e.target.closest('input, button, label, #aiArea')) {
-        missTapCount++;
-      }
-    });
-
-    //エリア内ミスタップカウンター
-    document.addEventListener('mousedown', () => {
-      befroreClick = document.activeElement;
-    }, { passive: true });
-    document.addEventListener('click', (e) => {
-      const targetElement = e.target.closest('input, button, label');
-      if(!targetElement || targetElement.closest('#aiArea')) return;
-      if(befroreClick === targetElement) {
-        insideMissTapCount++;
-      }
-    });
-
-
-    //home→menu
-    startBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      if(agreementCheck.checked){
-        //画面切り替え
-        homeArea.style.display = 'none';
-        menuArea.style.display = 'block';
-        hamburgerMenu.style.display = 'block';
-        aiArea.style.display = 'block';
-        changeStep('メニュー');
-      }else {
-        agreementMessage.textContent = '同意するにチェックを入れてください';
-      }
-    })
-
-    //メニュー遷移(menu→main/dummy)
-    document.addEventListener("DOMContentLoaded", () => {
-      const hamburger = document.querySelector(".hamburger");
-      const toggleBtn = document.querySelector(".menu-toggle");
-      const closeBtn = document.querySelector(".menu-close");
-      const menu = document.querySelector("#menu");
-      const groupA = document.getElementById("groupA");
-      const groupB = document.getElementById("groupB");
-      const groupC = document.getElementById("groupC");
-
-      toggleBtn.addEventListener("click", function() {
-        menu.classList.add("is-open");
-        hamburger.classList.add("menu-open");
-
-        toggleBtn.setAttribute("aria-expanded", "true");
-        toggleBtn.setAttribute("aria-label", "メニューを閉じる");
-        menu.setAttribute("aria-hidden", "false");
-      });
-
-      closeBtn.addEventListener("click", function() {
-        menu.classList.remove("is-open");
-        hamburger.classList.remove("menu-open");
-        
-        toggleBtn.setAttribute("aria-expanded", "false");
-        toggleBtn.setAttribute("aria-label", "メニューを開く");
-        menu.setAttribute("aria-hidden", "true");
-      });
-
-      groupA.addEventListener('click', function() {
-        menuArea.style.display = 'none';
-        inputArea.style.display = 'block';
-        hamburgerMenu.style.display= 'none';
-        dummyArea.style.display = 'none';
-        changeStep('情報入力');
-      });
-      groupB.addEventListener('click', function() {
-        menuArea.style.display = 'none';
-        dummyArea.style.display = 'block';
-        dummyMessage.textContent = 'ここはグループBです。';
-        changeStep('ダミー');
-        menu.classList.remove("is-open");
-        hamburger.classList.remove("menu-open");
-        
-        toggleBtn.setAttribute("aria-expanded", "false");
-        toggleBtn.setAttribute("aria-label", "メニューを開く");
-        menu.setAttribute("aria-hidden", "true");
-      });
-      groupC.addEventListener('click', function() {
-        menuArea.style.display = 'none';
-        dummyArea.style.display = 'block';
-        dummyMessage.textContent = 'ここはグループCです。';
-        changeStep('ダミー');
-        menu.classList.remove("is-open");
-        hamburger.classList.remove("menu-open");
-        
-        toggleBtn.setAttribute("aria-expanded", "false");
-        toggleBtn.setAttribute("aria-label", "メニューを開く");
-        menu.setAttribute("aria-hidden", "true");
-      });
-    });
-
-    //main内処理
-    function changeStep(newStepName) {
-      updateStepName(newStepName);
-      stepName = newStepName;
-    }
-
-    lname.addEventListener('focus', function(e) {
-      changeStep('姓');
-    });
-    fname.addEventListener('focus', function(e) {
-      changeStep('名');
-    });
-    year.addEventListener('focus', function(e) {
-      changeStep('年齢');
-    });
-    uploadPhoto.addEventListener('focus', function(e) {
-      changeStep('写真');
-    })
-    
-    //写真　プレビュー
-    uploadPhoto.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if(file) {
-        const fileURL = URL.createObjectURL(file);
-        preview.src = fileURL;
-        preview.style.display = 'block';
-        }
-      });
-
-    //写真　確認で表示
-    confBtn.addEventListener('click', function() {
-      const file = uploadPhoto.files[0];
-      if(file) {
-        const fileURL = URL.createObjectURL(file);
-        confirmPhoto.src = fileURL;
-        confirmPhoto.style.display = 'block';
-        }
-    });
-
-    //入力確認へすすむ
-    inputForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      confirmLname.textContent = document.getElementById('lname').value;
-      confirmFname.textContent = document.getElementById('fname').value;
-      confirmYear.textContent = document.getElementById('year').value;
-
-      //画面切り替えmain→conf
-      inputArea.style.display = 'none';
-      confirmArea.style.display = 'block';
-      changeStep('入力確認');
-    });
-
-    //修正
-    backBtn.addEventListener('click', function() {
-      confirmArea.style.display = 'none';
-      inputArea.style.display = 'block';
-      changeStep('情報入力');
-    });
-
-    //送信
-    submitBtn.addEventListener('click', function() {
-      const result = '成功';
-
-      statusMessage.textContent = '送信中...';
-      statusMessage.style.color = 'black';
-      submitBtn.disabled = true;  //連打防止
-
-      saveData(result);
-    });
-
-    //リタイアボタン押下処理
-    retireBtn.addEventListener('click', function(e) {
-      const attention = confirm('実験を中断しますか？');
-      const endTime = new Date();
-      const executionTimeSec = ((endTime - startTimeWhole) / 1000).toFixed(2);
-      const result = stepName + 'で中断';/* ステップ名＋中断 */
-
-      if(!attention){
-        e.preventDefault();
-      }else {
-        saveData(result);
-
-        //メッセージ変更
-        compStatus.textContent = '実験が中断されました';
-        compMessage.textContent = 'スタッフを呼んでください。';
-      }
-    });
-
-    //だいぶありえない時間計測ズ
+    /* =========================================================
+     * 時間計測
+     * ========================================================= */
     const tracker = {
       nowName: stepName,
       timeStart: new Date(),
@@ -774,189 +689,956 @@
         入力確認: 0
       }
     };
-    function updateStepName(newStepName){
+    function updateStepName(newStepName) {
       const now = new Date();
-      if (tracker.nowName && tracker.timeStart) {
-        const elapsedSeconds = (now - tracker.timeStart) / 1000;  // 数値のまま足す
-        if (tracker.durations.hasOwnProperty(tracker.nowName)) {
-          tracker.durations[tracker.nowName] += elapsedSeconds;
-        }
+      if (Object.prototype.hasOwnProperty.call(tracker.durations, tracker.nowName)) {
+        // 数値のまま足す（toFixed は文字列になり、文字列連結されてしまうため使わない）
+        tracker.durations[tracker.nowName] += (now - tracker.timeStart) / 1000;
       }
       tracker.nowName = newStepName;
       tracker.timeStart = now;
     }
+    // 画面やステップが変わる時は必ずこれを呼ぶ
+    function changeStep(newStepName) {
+      updateStepName(newStepName);
+      stepName = newStepName;
+    }
 
-    //全体記録送信
-    function saveData(result) {
-      updateStepName(stepName);
-      //全体の実行時間計測
-      const endTime = new Date();
-      const executionTimeSec = ((endTime - startTimeWhole) / 1000).toFixed(2);
+    /* =========================================================
+     * 音声案内（読み上げ・繰り返し）
+     * ========================================================= */
+    const voice = {
+      supported: 'speechSynthesis' in window,
+      unlocked: false,   // ブラウザはユーザーが一度画面に触れるまで読み上げを許可しない
+      pending: null,     // 解禁前に頼まれた読み上げ
+      timer: null,       // 繰り返し用タイマー
+      speakId: 0,        // 古い読み上げの終了イベントを無視するための番号
+      current: null,     // 今読み上げている文 {text, repeat}
+      lastGuide: null,   // 最後の案内 {text, target, repeat}（「案内を聞く」用）
+      jaVoice: null,
+      aiSpeaking: false, // AIの回答を読み上げ中（既存の案内より優先）
+      guideMissed: false,// AI優先のため読み上げを見送った案内があるか
+    };
 
-      //空欄を「-」に置き換え
-      const inputs = document.querySelectorAll("#lname, #fname, #year");
-        inputs.forEach(function(input) {
-          if (input.value.trim() === "") {
-            input.value = "-";
-          }
-        });
+    // AI質問の状態（guide() から参照するので、ここで先に用意しておく）
+    const ai = {
+      busy: false,       // 聞き取り中 または 返事待ち
+      listening: false,  // 聞き取り中
+      thinking: false,   // AIの返事待ち
+      recog: null,       // 音声認識のオブジェクト
+      finalText: '',
+      interimText: '',
+      lastError: '',
+      listenTimer: null,
+      history: [],       // 直近の会話 {q, a}
+    };
 
-      formData = {
-          collaboratorId: collaboratorId,
-          lname: document.getElementById('lname').value,
-          fname: document.getElementById('fname').value,
-          year: document.getElementById('year').value,
-          result: result,
-          executionTime: executionTimeSec,
-          outsideMisstaps: missTapCount,
-          insideMisstaps: insideMissTapCount
-        };
+    function loadJaVoice() {
+      const voices = window.speechSynthesis.getVoices();
+      voice.jaVoice = voices.find(v => /^ja/i.test(v.lang)) || null;
+    }
+    if (voice.supported) {
+      loadJaVoice();
+      window.speechSynthesis.onvoiceschanged = loadJaVoice;
+    }
+    if (!voice.supported || !SHOW_REPLAY_BUTTON) {
+      speakBtn.style.display = 'none';
+    }
 
-      timeData = {
-          collaboratorId: collaboratorId,
-          home: Math.round(tracker.durations.ホーム),
-          menu: Math.round(tracker.durations.メニュー),
-          dummy: Math.round(tracker.durations.ダミー),
-          main: Math.round(tracker.durations.情報入力),
-          lname: Math.round(tracker.durations.姓),
-          fname: Math.round(tracker.durations.名),
-          year: Math.round(tracker.durations.年齢),
-          photo: Math.round(tracker.durations.写真),
-          conf: Math.round(tracker.durations.入力確認)
+    // 読み上げと繰り返しを止める
+    function stopSpeech() {
+      voice.aiSpeaking = false;
+      if (!voice.supported) return;
+      voice.speakId++;
+      clearTimeout(voice.timer);
+      voice.timer = null;
+      window.speechSynthesis.cancel();
+    }
+
+    // 読み上げる。repeat=true なら、読み終わってから REPEAT_INTERVAL_MS 後に繰り返す
+    function speak(text, { repeat = false } = {}) {
+      if (!voice.supported || !text) return;
+      if (!voice.unlocked) {
+        voice.pending = { text, repeat };
+        return;
+      }
+      stopSpeech();
+      const id = voice.speakId;
+      voice.current = { text, repeat };
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ja-JP';
+      if (voice.jaVoice) utterance.voice = voice.jaVoice;
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      utterance.onend = () => {
+        if (repeat && id === voice.speakId) scheduleRepeat(id);
       };
-
-      //GASにデータを送信
-      callGas('save', { formData: formData, timeData: timeData })
-        .then(onSuccess)
-        .catch((err) => onFailure(err.message || err));
+      window.speechSynthesis.speak(utterance);
     }
 
-    // ===== AIアシスタント =====
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition = null;
-
-    // iOS対策: ボタンを押した瞬間に読み上げ機能を「解錠」する(非同期後の読み上げが無音になるのを防ぐ)
-    function unlockSpeech() {
-      if (!('speechSynthesis' in window)) return;
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(' ');
-      u.volume = 0;
-      speechSynthesis.speak(u);
-    }
-
-    function speak(text) {
-      if (!('speechSynthesis' in window)) return;
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ja-JP';
-      u.rate = 0.9;
-      speechSynthesis.speak(u);
-    }
-
-    if (SpeechRecognition) {
-      recognition = new SpeechRecognition();
-      recognition.lang = 'ja-JP';
-      recognition.interimResults = false;
-      recognition.continuous = false;
-
-      recognition.onstart = () => { voiceBtn.textContent = '🎤 聞いています…'; voiceBtn.disabled = true; };
-      recognition.onend   = () => { voiceBtn.textContent = '🎤 声で質問する'; voiceBtn.disabled = aiBusy; };
-      recognition.onerror = (e) => {
-        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-          aiText.textContent = 'マイクが使えません。下の欄に文字で入力してください。';
-        } else if (e.error === 'no-speech') {
-          aiText.textContent = '声が聞こえませんでした。もう一度お試しください。';
-        } else {
-          aiText.textContent = '聞き取れませんでした。もう一度お試しください。(' + e.error + ')';
+    function scheduleRepeat(id) {
+      clearTimeout(voice.timer);
+      voice.timer = setTimeout(() => {
+        if (id === voice.speakId && voice.current) {
+          // 案内を繰り返す時は、ハイライトも案内の場所に戻す（AIが別の場所を光らせていた場合など）
+          const g = voice.lastGuide;
+          if (g && g.text === voice.current.text) setHighlight(g.target, false);
+          speak(voice.current.text, { repeat: true });
         }
-      };
-      recognition.onresult = (e) => askAI(e.results[0][0].transcript);
-    } else {
-      voiceBtn.disabled = true;
-      aiText.textContent = 'このブラウザは音声入力に対応していません。下の欄に文字で入力してください。';
+      }, REPEAT_INTERVAL_MS);
     }
 
-    voiceBtn.addEventListener('click', () => {
-      if (!recognition || aiBusy) return;
-      unlockSpeech();
-      if ('speechSynthesis' in window) speechSynthesis.cancel();   // 読み上げ音声を拾わないように止める
-      try { recognition.start(); } catch (e) {}
+    // 文字を入力している間は繰り返しを後ろにずらす（入力中に何度も喋らないように）
+    document.addEventListener('input', () => {
+      if (voice.timer) scheduleRepeat(voice.speakId);
     });
 
-    aiSendBtn.addEventListener('click', () => {
-      const q = aiInput.value.trim();
-      if (!q || aiBusy) return;
-      unlockSpeech();
-      aiInput.value = '';
-      askAI(q);
+    // 最初のタップで読み上げを解禁（iPhone / Chrome の自動再生制限への対策）
+    function unlockSpeech() {
+      if (voice.unlocked || !voice.supported) return;
+      voice.unlocked = true;
+      const p = voice.pending;
+      voice.pending = null;
+      if (p) speak(p.text, { repeat: p.repeat });
+    }
+    ['pointerup', 'touchend', 'click', 'keydown'].forEach(type => {
+      document.addEventListener(type, unlockSpeech, { capture: true });
     });
 
-    aiInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.isComposing) {
-        e.preventDefault();
-        aiSendBtn.click();
+    // 別アプリに切り替えた時などは止め、戻ってきたら案内し直す
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (ai.listening) {
+          abortListening();
+          showAiText('', AI_MSG.idle);
+        }
+        stopSpeech();
+      } else if (voice.lastGuide && voice.lastGuide.repeat && !ai.busy) {
+        speak(voice.lastGuide.text, { repeat: true });
       }
     });
 
-    function askAI(question) {
-      aiBusy = true;
-      voiceBtn.disabled = true;
-      aiSendBtn.disabled = true;
-      aiText.textContent = '「' + question + '」\n\n考え中です…';
+    /* =========================================================
+     * ハイライト
+     * ========================================================= */
+    function setHighlight(element, scroll = true) {
+      document.querySelectorAll('.highlight-active').forEach(el => {
+        el.classList.remove('highlight-active');
+      });
+      if (!element) return;
+      element.classList.add('highlight-active');
+      // 画面外にあれば見える位置までスクロール（固定表示の要素は除く）
+      if (scroll && getComputedStyle(element).position !== 'fixed') {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
 
-      callGas('ai', {
-        question: question,
-        stepName: stepName,
-        collaboratorId: collaboratorId,
-        history: aiHistory
-      })
-        .then((res) => {
-          aiBusy = false; voiceBtn.disabled = !recognition; aiSendBtn.disabled = false;
-          if (res.status === 'success') {
-            aiHistory.push({ role: 'user', text: question });
-            aiHistory.push({ role: 'model', text: res.answer });
-            if (aiHistory.length > 20) aiHistory = aiHistory.slice(-20);
-            aiText.textContent = res.answer;
-            speak(res.answer);
-          } else {
-            aiText.textContent = 'うまく答えられませんでした。スタッフを呼んでください。';
-            console.error(res.message);
-          }
-        })
-        .catch((err) => {
-          aiBusy = false; voiceBtn.disabled = !recognition; aiSendBtn.disabled = false;
-          aiText.textContent = '通信に失敗しました。もう一度お試しください。';
-          console.error(err);
+    /* =========================================================
+     * 案内 = ハイライト + 読み上げ をまとめて行う
+     * ========================================================= */
+    function guide(text, target = null, { repeat = true, scroll = true } = {}) {
+      const last = voice.lastGuide;
+      voice.lastGuide = { text, target, repeat };
+      setHighlight(target, scroll);
+      // AIの読み上げ中・質問の聞き取り中は、案内を読み上げずにAIの後へ回す（AI優先）
+      if (voice.aiSpeaking || ai.busy) {
+        voice.guideMissed = true;
+        return;
+      }
+      voice.guideMissed = false;
+      // 同じ案内を読み上げ中なら最初から言い直さない
+      if (last && last.text === text && voice.supported && window.speechSynthesis.speaking) return;
+      speak(text, { repeat });
+    }
+
+    // 「案内を聞く」ボタン
+    speakBtn.addEventListener('click', () => {
+      const g = voice.lastGuide;
+      if (!g) return;
+      setHighlight(g.target);
+      speak(g.text, { repeat: g.repeat });
+    });
+
+    /* =========================================================
+     * ID発行
+     * ========================================================= */
+    function formatDateNum(date) {
+      const parts = new Intl.DateTimeFormat('ja-JP', {
+        timeZone: 'Asia/Tokyo',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23'
+      }).formatToParts(date);
+
+      const values = {};
+      parts.forEach(part => {
+        values[part.type] = part.value;
+      });
+
+      return values.month + values.day
+      + values.hour + values.minute + values.second;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const dateNum = formatDateNum(new Date());
+      const randomNum = Math.floor(Math.random() * 90) + 10;
+      collaboratorId = dateNum + randomNum.toString();
+    });
+
+    /* =========================================================
+     * ミスタップ計測
+     * ========================================================= */
+    //エリア外ミスタップカウンター
+    document.addEventListener('click', (e) => {
+      if(!e.target.closest('input, button, label')) {
+        missTapCount++;
+      }
+    });
+
+    //エリア内ミスタップカウンター
+    document.addEventListener('mousedown', () => {
+      befroreClick = document.activeElement;
+    }, { passive: true });
+    document.addEventListener('click', (e) => {
+      const targetElement = e.target.closest('input, button, label');
+      if(!targetElement) return;
+      if(befroreClick === targetElement) {
+        insideMissTapCount++;
+      }
+    });
+
+    /* =========================================================
+     * ホーム
+     * ========================================================= */
+    // 初期案内（最初のタップで読み上げが始まる。ハイライトはすぐ表示）
+    guide(GUIDE.home, agreeLabel);
+
+    agreementCheck.addEventListener('change', function() {
+      if (this.checked) {
+        agreementMessage.textContent = '';
+        guide(GUIDE.agreed, startBtn);
+      } else {
+        guide(GUIDE.home, agreeLabel);
+      }
+    });
+
+    //home→menu
+    startBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if(agreementCheck.checked){
+        homeArea.style.display = 'none';
+        menuArea.style.display = 'block';
+        hamburgerMenu.style.display = 'block';
+        changeStep('メニュー');
+        guide(GUIDE.menu, toggleBtn);
+      }else {
+        agreementMessage.textContent = '同意するにチェックを入れてください';
+        guide(GUIDE.needAgree, agreeLabel);
+      }
+    });
+
+    /* =========================================================
+     * メニュー（menu→main/dummy）
+     * ========================================================= */
+    function openMenu() {
+      menu.classList.add('is-open');
+      hamburgerMenu.classList.add('menu-open');
+      toggleBtn.setAttribute('aria-expanded', 'true');
+      toggleBtn.setAttribute('aria-label', 'メニューを閉じる');
+      menu.setAttribute('aria-hidden', 'false');
+    }
+    function closeMenu() {
+      menu.classList.remove('is-open');
+      hamburgerMenu.classList.remove('menu-open');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      toggleBtn.setAttribute('aria-label', 'メニューを開く');
+      menu.setAttribute('aria-hidden', 'true');
+    }
+
+    toggleBtn.addEventListener('click', function() {
+      openMenu();
+      guide(GUIDE.menuOpen, HIGHLIGHT_OWN_GROUP ? groupA : null, { scroll: false });
+    });
+
+    closeBtn.addEventListener('click', function() {
+      closeMenu();
+      const text = (stepName === 'ダミー') ? GUIDE.dummy(currentDummyName) : GUIDE.menu;
+      guide(text, toggleBtn, { scroll: false });
+    });
+
+    groupA.addEventListener('click', function() {
+      closeMenu();
+      menuArea.style.display = 'none';
+      dummyArea.style.display = 'none';
+      hamburgerMenu.style.display = 'none';
+      inputArea.style.display = 'block';
+      changeStep('情報入力');
+      guide(GUIDE.input, lname);
+    });
+
+    function showDummy(name) {
+      closeMenu();
+      menuArea.style.display = 'none';
+      dummyArea.style.display = 'block';
+      dummyMessage.textContent = `ここは${name}です。`;
+      currentDummyName = name;
+      changeStep('ダミー');
+      guide(GUIDE.dummy(name), toggleBtn, { scroll: false });
+    }
+    groupB.addEventListener('click', () => showDummy('グループB'));
+    groupC.addEventListener('click', () => showDummy('グループC'));
+
+    /* =========================================================
+     * 入力画面
+     * ========================================================= */
+    let muteFocusGuide = false; // 入力漏れ案内中は、フォーカス時の案内で上書きしない
+
+    function onFieldFocus(step, text, target) {
+      changeStep(step);
+      if (muteFocusGuide) {
+        setHighlight(target, false);
+        return;
+      }
+      guide(text, target, { scroll: false });
+    }
+
+    lname.addEventListener('focus', () => onFieldFocus('姓', GUIDE.lname, lname));
+    fname.addEventListener('focus', () => onFieldFocus('名', GUIDE.fname, fname));
+    year.addEventListener('focus', () => onFieldFocus('年齢', GUIDE.year, year));
+    uploadPhoto.addEventListener('focus', () => onFieldFocus('写真', GUIDE.photo, groupPhoto));
+    // iPhone ではファイル選択に focus が来ないことがあるので click でも案内
+    uploadPhoto.addEventListener('click', () => onFieldFocus('写真', GUIDE.photoPicking, groupPhoto));
+
+    //写真　プレビュー
+    uploadPhoto.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if(file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+        inputMessage.textContent = '';
+        guide(GUIDE.photoSelected, confBtn);
+      } else {
+        guide(GUIDE.photo, groupPhoto);
+      }
+    });
+
+        // ===== 入力欄の自動フォーカス(姓→名→年齢→写真→確認ボタン) =====
+    const focusOrder = [lname, fname, year, uploadPhoto];
+    let lastCompositionEnd = 0;   //漢字変換を確定した時刻
+    let lastTapTarget = null;     //最後にタップした要素
+    let autoFocused = null;       //自動で移動したフォーカス先
+
+    document.addEventListener('pointerdown', (e) => {
+      lastTapTarget = e.target;
+    }, { capture: true, passive: true });
+
+    //今の入力欄をハイライト(写真は欄の枠ごと)
+    function highlightField(el) {
+      document.querySelectorAll('#inputArea .highlight-active')
+        .forEach(x => x.classList.remove('highlight-active'));
+      if (!el) return;
+      const target = (el === uploadPhoto) ? el.closest('.form-group') : el;
+      target.classList.add('highlight-active');
+    }
+    focusOrder.forEach(el => el.addEventListener('focus', () => highlightField(el)));
+    confBtn.addEventListener('focus', () => highlightField(null));
+
+    function moveFocus(next) {
+      autoFocused = next;
+      next.focus({ preventScroll: true });
+      next.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+
+    //入力済みで正しい値なら次の欄へ
+    function goNext(current) {
+      if (!current.value.trim()) return;
+      if (!current.checkValidity()) {   //年齢が数字でないときなど
+        current.reportValidity();
+        return;
+      }
+      const next = focusOrder[focusOrder.indexOf(current) + 1];
+      if (next) moveFocus(next);
+    }
+
+    [lname, fname, year].forEach(input => {
+      input.addEventListener('compositionend', () => { lastCompositionEnd = Date.now(); });
+
+      //キーボードの「次へ」(Enter)で次の欄へ
+      input.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        if (e.isComposing || e.keyCode === 229) return;   //漢字変換を確定するEnterは無視
+        e.preventDefault();   //Enterで確認画面へ進んでしまうのを防ぐ
+        if (Date.now() - lastCompositionEnd < 100) return;  //Safariで変換確定直後に来るEnter
+        goNext(input);
+      });
+
+      //iPhoneの数字キーボードの「完了」など、Enterなしで入力欄から抜けたとき
+      input.addEventListener('change', () => {
+        const tapped = lastTapTarget;
+        setTimeout(() => {
+          //他の欄や、AI・中止・確認ボタンを押した場合は、そちらを優先する
+          if (tapped && tapped.closest && tapped.closest('#aiArea, #retireArea, #confBtn')) return;
+          const active = document.activeElement;
+          if (!active || active === document.body) goNext(input);
+        }, 0);
+      });
+    });
+
+    //写真を選んだら「確認画面へ進む」ボタンへ
+    uploadPhoto.addEventListener('change', () => {
+      if (uploadPhoto.files[0]) moveFocus(confBtn);
+    });
+
+    //写真　確認で表示
+    confBtn.addEventListener('click', function() {
+      const file = uploadPhoto.files[0];
+      if(file) {
+        confirmPhoto.src = URL.createObjectURL(file);
+        confirmPhoto.style.display = 'block';
+      }
+    });
+
+    // 入力漏れ・形式違いの案内（ブラウザ標準の吹き出しの代わりに、音声＋ハイライトで知らせる）
+    let invalidHandled = false;
+    inputForm.addEventListener('invalid', function(e) {
+      e.preventDefault(); // 標準の吹き出しを出さない（送信は止まったまま）
+      if (invalidHandled) return; // 最初の1つだけ案内
+      invalidHandled = true;
+      setTimeout(() => { invalidHandled = false; }, 0);
+
+      const el = e.target;
+      const label = el.dataset.label || '入力欄';
+      const msg = (el === year && el.validity.patternMismatch)
+        ? GUIDE.yearInvalid
+        : GUIDE.required(label);
+      const target = (el.type === 'file') ? groupPhoto : el;
+
+      inputMessage.textContent = msg;
+      muteFocusGuide = true;
+      el.focus({ preventScroll: true });
+      muteFocusGuide = false;
+      guide(msg, target);
+    }, true); // invalid はバブリングしないのでキャプチャで受ける
+
+    //入力確認へすすむ（main→conf）
+    inputForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      inputMessage.textContent = '';
+
+      confirmLname.textContent = lname.value;
+      confirmFname.textContent = fname.value;
+      confirmYear.textContent = year.value;
+
+      inputArea.style.display = 'none';
+      confirmArea.style.display = 'block';
+      submitBtn.disabled = false;  //「修正する」から戻ってきた時も押せるようにする
+      backBtn.disabled = false;
+      changeStep('入力確認');
+      guide(GUIDE.confirm(lname.value, fname.value, year.value), submitBtn);
+    });
+
+    //修正
+    backBtn.addEventListener('click', function() {
+      confirmArea.style.display = 'none';
+      inputArea.style.display = 'block';
+      statusMessage.textContent = '';
+      submitBtn.disabled = true;  //連打防止
+      backBtn.disabled = true;
+      changeStep('情報入力');
+      guide(GUIDE.back, lname);
+    });
+
+    //送信
+    submitBtn.addEventListener('click', function() {
+      if(!confCheck.checked){
+        confMessage.textContent = '確認しましたにチェックを入れてください';
+        confCheck.scrollIntoView({block:"center"});
+        guide(GUIDE.needConf, confForcus);
+      }else {
+        statusMessage.textContent = '送信中...';
+        statusMessage.style.color = 'black';
+        submitBtn.disabled = true;  //連打防止
+        guide(GUIDE.sending, null, { repeat: false });
+        saveData('成功');
+      }
+    });
+
+    /* =========================================================
+     * 中断
+     * ========================================================= */
+    retireBtn.addEventListener('click', function() {
+      if (ai.listening) abortListening(); // 聞き取り中なら止める
+      speak(GUIDE.retireConfirm);
+      const attention = confirm('実験を中断しますか？');
+
+      if (!attention) {
+        // 続ける場合は直前の案内に戻す
+        const g = voice.lastGuide;
+        if (g) {
+          setHighlight(g.target, false);
+          speak(g.text, { repeat: g.repeat });
+        }
+        return;
+      }
+      isRetired = true;
+      retireBtn.disabled = true;
+      guide(GUIDE.retiring, null, { repeat: false });
+      saveData(stepName + 'で中断');
+    });
+
+    /* =========================================================
+     * AIに声で質問する
+     * ========================================================= */
+    const aiArea = document.getElementById('aiArea');
+    const micBtn = document.getElementById('micBtn');
+    const aiQuestion = document.getElementById('aiQuestion');
+    const aiAnswer = document.getElementById('aiAnswer');
+    const aiBubble = document.getElementById('aiBubble');
+    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+
+    const AI_MSG = {
+      idle:        'わからないことがあれば、ボタンを押して話しかけてください。',
+      listening:   '聞いています。お話しください。話し終わったら、もう一度ボタンを押してください。',
+      thinking:    '考えています。少しお待ちください。',
+      wait:        '少しお待ちください。',
+      notHeard:    'うまく聞き取れませんでした。もう一度ボタンを押して、ゆっくりお話しください。',
+      noMic:       'マイクが使えない設定になっています。スタッフを呼んでください。',
+      unsupported: 'この端末では、声での質問が使えません。わからないときは、スタッフを呼んでください。',
+      failed:      '今は、お答えできませんでした。画面の案内に沿って進めるか、スタッフを呼んでください。',
+    };
+
+    // 画面下のAI欄の高さに合わせて、本文が隠れないように余白を取る
+    function syncBottomSpace() {
+      const h = (aiArea.style.display === 'none') ? 0 : aiArea.offsetHeight;
+      document.body.style.paddingBottom = (h + 24) + 'px';
+      speakBtn.style.bottom = (h + 16) + 'px';
+    }
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(syncBottomSpace).observe(aiArea);
+    }
+    window.addEventListener('resize', syncBottomSpace);
+    syncBottomSpace();
+
+    function setMicState(state) {
+      micBtn.classList.remove('listening', 'thinking');
+      if (state === 'listening') {
+        micBtn.classList.add('listening');
+        micBtn.textContent = '⏹ 話し終わったら押す';
+      } else if (state === 'thinking') {
+        micBtn.classList.add('thinking');
+        micBtn.textContent = '⏳ 考えています…';
+      } else {
+        micBtn.textContent = '🎤 声で質問する';
+      }
+    }
+
+    function showAiText(question, answer) {
+      if (question) {
+        aiQuestion.textContent = 'あなた：「' + question + '」';
+        aiQuestion.hidden = false;
+      } else {
+        aiQuestion.textContent = '';
+        aiQuestion.hidden = true;
+      }
+      aiAnswer.textContent = answer;
+      aiBubble.scrollTop = 0;
+    }
+
+    // AIの回答を読み上げる（既存の案内より優先）。読み終わったら既存の案内に戻す
+    function speakAi(text) {
+      stopSpeech();
+      if (!voice.supported || !text) { afterAiSpeech(); return; }
+      const id = voice.speakId;
+      voice.aiSpeaking = true;
+      voice.current = null;
+
+      // 長い文は途中で止まる端末があるので、文ごとに区切って順番に読む
+      const chunks = (text.match(/[^。！？!?]+[。！？!?]?/g) || [text])
+        .map(s => s.trim()).filter(Boolean);
+      let i = 0;
+      let watchdog = null;
+
+      const next = () => {
+        clearTimeout(watchdog);
+        if (id !== voice.speakId) return;     // 途中で別の読み上げに切り替わった
+        if (i >= chunks.length) {
+          voice.aiSpeaking = false;
+          afterAiSpeech();
+          return;
+        }
+        const chunk = chunks[i++];
+        const u = new SpeechSynthesisUtterance(chunk);
+        u.lang = 'ja-JP';
+        if (voice.jaVoice) u.voice = voice.jaVoice;
+        u.rate = 0.9;
+        u.pitch = 1.0;
+        // 終了イベントと保険のタイマーが両方来ても、1文につき1回だけ次へ進む
+        let done = false;
+        const finish = () => { if (done) return; done = true; next(); };
+        u.onend = finish;
+        u.onerror = finish;
+        // iPhone で終了イベントが来ないことがあるための保険
+        watchdog = setTimeout(finish, chunk.length * 400 + 4000);
+        window.speechSynthesis.speak(u);
+      };
+      next();
+    }
+
+    // AIの読み上げが終わった後、既存の案内に戻す
+    function afterAiSpeech() {
+      const g = voice.lastGuide;
+      if (!g || ai.busy) return;
+      if (voice.guideMissed) {
+        // AIの読み上げ中に画面が進んでいたら、その案内を少し後に読む
+        voice.guideMissed = false;
+        voice.current = { text: g.text, repeat: g.repeat };
+        clearTimeout(voice.timer);
+        const id = voice.speakId;
+        voice.timer = setTimeout(() => {
+          if (id !== voice.speakId) return;
+          setHighlight(g.target, false);
+          speak(g.text, { repeat: g.repeat });
+        }, 1500);
+      } else if (g.repeat) {
+        // いつもどおり、間隔をあけてから案内を繰り返す
+        voice.current = { text: g.text, repeat: true };
+        scheduleRepeat(voice.speakId);
+      }
+    }
+
+    // AIが光らせてよい場所（今の画面に見えているものだけ）
+    function getVisibleTargets() {
+      const shown = (el) => el && el.style.display !== 'none';
+      const menuOpen = menu.classList.contains('is-open');
+      const t = {};
+      if (shown(homeArea)) {
+        t.agree = agreeLabel;
+        t.start = startBtn;
+      } else if (shown(hamburgerMenu)) {
+        if (menuOpen) {
+          t.groupCorrect = groupA;
+          t.menuClose = closeBtn;
+        } else {
+          t.menuButton = toggleBtn;
+        }
+      } else if (shown(inputArea)) {
+        t.lname = lname;
+        t.fname = fname;
+        t.year = year;
+        t.photo = groupPhoto;
+        t.confirmButton = confBtn;
+      } else if (shown(confirmArea)) {
+        t.confirmCheck = confForcus;
+        t.submit = submitBtn;
+        t.back = backBtn;
+      }
+      if (shown(retireArea)) t.retire = retireBtn;
+      return t;
+    }
+
+    // AIに渡す「今の画面の状態」（名前や年齢そのものは送らず、入力済みかどうかだけ）
+    function getScreenContext() {
+      const shown = (el) => el.style.display !== 'none';
+      const yn = (b) => b ? 'はい' : 'いいえ';
+      const lines = [];
+      if (shown(homeArea)) {
+        lines.push('画面：ホーム画面（同意画面）');
+        lines.push('「同意する」にチェック済み：' + yn(agreementCheck.checked));
+      } else if (shown(menuArea) || shown(dummyArea)) {
+        if (shown(dummyArea)) {
+          lines.push('画面：違うグループのページ（' + currentDummyName + 'のページ）が表示されている');
+        } else {
+          lines.push('画面：グループ表示画面（「あなたは、' + GROUP_NAME + 'です」と表示）');
+        }
+        lines.push('メニューが開いている：' + yn(menu.classList.contains('is-open')));
+      } else if (shown(inputArea)) {
+        lines.push('画面：入力画面');
+        lines.push('「姓」入力済み：' + yn(lname.value.trim()));
+        lines.push('「名」入力済み：' + yn(fname.value.trim()));
+        lines.push('「年齢」入力済み：' + yn(year.value.trim()));
+        if (year.value.trim()) lines.push('「年齢」が数字だけになっている：' + yn(year.checkValidity()));
+        lines.push('写真を選択済み：' + yn(uploadPhoto.files && uploadPhoto.files[0]));
+        const active = document.activeElement;
+        const label = active && active.dataset ? active.dataset.label : '';
+        if (label) lines.push('今、指で押している欄：「' + label + '」');
+      } else if (shown(confirmArea)) {
+        lines.push('画面：入力内容の確認画面');
+        lines.push('「確認しました」にチェック済み：' + yn(confCheck.checked));
+        if (statusMessage.textContent) lines.push('画面の表示：' + statusMessage.textContent);
+      } else if (shown(compArea)) {
+        lines.push('画面：終了画面');
+      }
+      if (inputMessage.textContent && shown(inputArea)) lines.push('画面の注意表示：' + inputMessage.textContent);
+      return lines.join('\n');
+    }
+
+    // GASのページ内なら google.script.run、GitHub Pages なら fetch でAIに質問する
+    function callAiServer(payload) {
+      const inGas = (typeof google !== 'undefined' && google.script && google.script.run);
+      if (inGas) {
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .askAi(payload);
         });
+      }
+      const controller = ('AbortController' in window) ? new AbortController() : null;
+      const timer = controller ? setTimeout(() => controller.abort(), AI_TIMEOUT_MS) : null;
+      return fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(Object.assign({ action: 'ai' }, payload)),
+        signal: controller ? controller.signal : undefined
+      })
+        .then(res => res.json())
+        .finally(() => clearTimeout(timer));
+    }
+
+    // 質問 → AI → 文字で表示 ＋ ハイライト ＋ 読み上げ
+    function askAi(question) {
+      ai.thinking = true;
+      ai.busy = true;
+      setMicState('thinking');
+      showAiText(question, AI_MSG.thinking);
+      speak(AI_MSG.wait); // 待っていることを声でも伝える（案内は ai.busy の間は止まる）
+
+      const targets = getVisibleTargets();
+      const payload = {
+        collaboratorId: collaboratorId,
+        stepName: stepName,
+        groupName: GROUP_NAME,
+        question: question,
+        screen: getScreenContext(),
+        currentGuide: voice.lastGuide ? voice.lastGuide.text : '',
+        targets: Object.keys(targets),
+        history: ai.history.slice(-3)
+      };
+
+      callAiServer(payload)
+        .then(res => {
+          if (!res || res.status !== 'success' || !res.answer) {
+            throw new Error(res && res.message ? res.message : '回答がありません');
+          }
+          return res;
+        })
+        .then(res => {
+          ai.history.push({ q: question, a: res.answer });
+          finishAi(question, res.answer, targets[res.target] || null);
+        })
+        .catch(err => {
+          console.error('AIエラー:', err);
+          finishAi(question, AI_MSG.failed, null);
+        });
+    }
+
+    function finishAi(question, answer, target) {
+      ai.thinking = false;
+      ai.busy = false;
+      setMicState('idle');
+      showAiText(question, answer);
+      if (target) setHighlight(target);
+      speakAi(answer);
+    }
+
+    // 聞き取り開始
+    function startListening() {
+      stopSpeech(); // 案内の声をマイクが拾わないように止める
+      let r;
+      try {
+        r = new SpeechRecognitionClass();
+      } catch (e) {
+        finishAi('', AI_MSG.unsupported, null);
+        return;
+      }
+      r.lang = 'ja-JP';
+      r.interimResults = true;
+      r.continuous = false;
+      r.maxAlternatives = 1;
+
+      ai.recog = r;
+      ai.finalText = '';
+      ai.interimText = '';
+      ai.lastError = '';
+      ai.listening = true;
+      ai.busy = true;
+      setMicState('listening');
+      showAiText('', AI_MSG.listening);
+
+      r.onresult = (e) => {
+        let fin = '';
+        let interim = '';
+        for (let i = 0; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) fin += t; else interim += t;
+        }
+        ai.finalText = fin;
+        ai.interimText = interim;
+        showAiText(fin + interim, AI_MSG.listening);
+      };
+      r.onerror = (e) => { ai.lastError = e.error || ''; };
+      r.onend = () => {
+        clearTimeout(ai.listenTimer);
+        ai.listening = false;
+        ai.recog = null;
+        const q = (ai.finalText || ai.interimText).trim();
+        if (q) {
+          askAi(q.slice(0, 200));
+        } else {
+          const noMic = (ai.lastError === 'not-allowed' || ai.lastError === 'service-not-allowed' || ai.lastError === 'audio-capture');
+          finishAi('', noMic ? AI_MSG.noMic : AI_MSG.notHeard, null);
+        }
+      };
+
+      // 話し続けて止まらない時のための上限
+      clearTimeout(ai.listenTimer);
+      ai.listenTimer = setTimeout(() => { if (ai.recog === r) r.stop(); }, LISTEN_MAX_MS);
+
+      try {
+        r.start();
+      } catch (e) {
+        ai.listening = false;
+        ai.recog = null;
+        finishAi('', AI_MSG.notHeard, null);
+      }
+    }
+
+    function abortListening() {
+      clearTimeout(ai.listenTimer);
+      if (ai.recog) {
+        ai.recog.onend = null;
+        try { ai.recog.abort(); } catch (e) { /* 何もしない */ }
+      }
+      ai.recog = null;
+      ai.listening = false;
+      ai.busy = false;
+      setMicState('idle');
+    }
+
+    micBtn.addEventListener('click', () => {
+      if (ai.thinking) return;              // 返事待ちの間は何もしない
+      if (ai.listening) {                   // 聞き取り中にもう一度押したら、聞き取り終了
+        if (ai.recog) ai.recog.stop();
+        return;
+      }
+      if (!SpeechRecognitionClass) {
+        finishAi('', AI_MSG.unsupported, null);
+        return;
+      }
+      startListening();
+    });
+
+    /* =========================================================
+     * 送信処理
+     * ========================================================= */
+    function saveData(result) {
+      // 今のステップの経過時間を確定させる
+      updateStepName(stepName);
+
+      const executionTimeSec = ((new Date() - startTimeWhole) / 1000).toFixed(2);
+      // 空欄は「-」で送る（画面上の入力欄は書き換えない）
+      const valueOrDash = (el) => el.value.trim() === '' ? '-' : el.value.trim();
+
+      formData = {
+        collaboratorId: collaboratorId,
+        lname: valueOrDash(lname),
+        fname: valueOrDash(fname),
+        year: valueOrDash(year),
+        result: result,
+        executionTime: executionTimeSec,
+        outsideMisstaps: missTapCount,
+        insideMisstaps: insideMissTapCount
+      };
+
+      timeData = {
+        collaboratorId: collaboratorId,
+        home: Math.round(tracker.durations.ホーム),
+        menu: Math.round(tracker.durations.メニュー),
+        dummy: Math.round(tracker.durations.ダミー),
+        main: Math.round(tracker.durations.情報入力),
+        lname: Math.round(tracker.durations.姓),
+        fname: Math.round(tracker.durations.名),
+        year: Math.round(tracker.durations.年齢),
+        photo: Math.round(tracker.durations.写真),
+        conf: Math.round(tracker.durations.入力確認)
+      };
+
+      sendToServer(formData, timeData);
+    }
+
+    // GASのページ内なら google.script.run、GitHub Pages なら fetch で GAS に送る
+    function sendToServer(formData, timeData) {
+      const inGas = (typeof google !== 'undefined' && google.script && google.script.run);
+      if (inGas) {
+        google.script.run
+          .withSuccessHandler(onSuccess)
+          .withFailureHandler(onFailure)
+          .insertToSheet(formData, timeData);
+      } else {
+        fetch(GAS_URL, {
+          method: 'POST',
+          // text/plain にすると CORS のプリフライトが発生せず GAS で受け取れる
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ formData, timeData })
+        })
+          .then(res => res.json())
+          .then(onSuccess)
+          .catch(err => onFailure(err && err.message ? err.message : err));
+      }
     }
 
     //送信成功
     function onSuccess(response) {
-      if (response.status === 'success') {
+      if (response && response.status === 'success') {
         statusMessage.textContent = '送信完了';
-        
+        statusMessage.style.color = 'black';
+
+        if (isRetired) {
+          compStatus.querySelector('h1').textContent = '実験が中断されました';
+          compMessage.textContent = 'スタッフを呼んでください。';
+        }
+
         //画面切り替え
         retireBtn.disabled = true;
         retireArea.style.display = 'none';
+        closeMenu();
+        hamburgerMenu.style.display = 'none';
         homeArea.style.display = 'none';
         menuArea.style.display = 'none';
         dummyArea.style.display = 'none';
         inputArea.style.display = 'none';
         confirmArea.style.display = 'none';
         compArea.style.display = 'block';
+
+        // 終了後はAI質問欄をしまう
+        abortListening();
         aiArea.style.display = 'none';
-        if ('speechSynthesis' in window) speechSynthesis.cancel();
+        syncBottomSpace();
+
+        guide(isRetired ? GUIDE.retired : GUIDE.complete, compArea, { repeat: false });
       } else {
-        onFailure(response.message);
+        onFailure(response ? response.message : '不明なエラー');
       }
     }
 
     //送信失敗
     function onFailure(error) {
-      submitBtn.disabled = false;
       statusMessage.textContent = '送信に失敗しました。　' + error;
       statusMessage.style.color = 'red';
-    }
+      submitBtn.disabled = false; // 再送できるように戻す
+      backBtn.disabled = false;
 
+      if (isRetired) {
+        isRetired = false;
+        retireBtn.disabled = false;
+        guide(GUIDE.retireFailed, retireBtn);
+      } else {
+        guide(GUIDE.failed, submitBtn);
+      }
+    }
   </script>
 </html>
