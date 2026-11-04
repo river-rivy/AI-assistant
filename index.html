@@ -1226,9 +1226,51 @@
     if ('ResizeObserver' in window) {
       new ResizeObserver(syncBottomSpace).observe(aiArea);
     }
+    const SCROLL_HIDE_THRESHOLD = 10;   // これ以上動いたら隠す／出す（px）
+    const USER_SCROLL_WINDOW_MS = 1200; // 指を動かしてからこの時間内のスクロールを「利用者の操作」とみなす
+    let aiCollapsed = false;
+    let lastScrollY = window.scrollY;
+    let lastUserScrollInput = 0;
+
+    // 回答エリア（とその上の余白）の高さぶんだけ下へずらす
+    function updateHideDistance() {
+      const gap = parseFloat(getComputedStyle(aiBubble).marginTop) || 0;
+      aiArea.style.setProperty('--ai-hide', (aiBubble.offsetHeight + gap) + 'px');
+    }
+
+    function setAiCollapsed(collapsed) {
+      if (aiCollapsed === collapsed) return;
+      aiCollapsed = collapsed;
+      if (collapsed) updateHideDistance();
+      aiArea.classList.toggle('ai-collapsed', collapsed);
+    }
+
+    const markUserScroll = () => { lastUserScrollInput = Date.now(); };
+    ['touchmove', 'wheel'].forEach(type => {
+      window.addEventListener(type, markUserScroll, { passive: true });
+    });
+    window.addEventListener('keydown', (e) => {
+      if (['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].includes(e.key)) markUserScroll();
+    });
+
+    window.addEventListener('scroll', () => {
+      const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const y = Math.min(Math.max(window.scrollY, 0), maxY); // iPhone のはね返りを除く
+      const dy = y - lastScrollY;
+      if (Math.abs(dy) < SCROLL_HIDE_THRESHOLD) return;
+      lastScrollY = y;
+
+      if (y <= 0) { setAiCollapsed(false); return; }
+      if (aiArea.style.display === 'none') return;
+      if (Date.now() - lastUserScrollInput > USER_SCROLL_WINDOW_MS) return; // 自動スクロールは無視
+      setAiCollapsed(dy > 0);
+    }, { passive: true });
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(syncBottomSpace).observe(aiArea);
+    }
     window.addEventListener('resize', syncBottomSpace);
     syncBottomSpace();
-
+    
     function setMicState(state) {
       micBtn.classList.remove('listening', 'thinking');
       if (state === 'listening') {
@@ -1252,6 +1294,7 @@
       }
       aiAnswer.textContent = answer;
       aiBubble.scrollTop = 0;
+      setAiCollapsed(false); // 新しい表示がある時は、隠していても必ず出す
     }
 
     // AIの回答を読み上げる（既存の案内より優先）。読み終わったら既存の案内に戻す
