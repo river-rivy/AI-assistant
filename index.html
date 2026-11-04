@@ -1226,7 +1226,7 @@
     if ('ResizeObserver' in window) {
       new ResizeObserver(syncBottomSpace).observe(aiArea);
     }
-    const SCROLL_HIDE_THRESHOLD = 10;   // これ以上動いたら隠す／出す（px）
+    const SCROLL_HIDE_THRESHOLD = 20;   // これ以上動いたら隠す／出す（px）
     const USER_SCROLL_WINDOW_MS = 1200; // 指を動かしてからこの時間内のスクロールを「利用者の操作」とみなす
     let aiCollapsed = false;
     let lastScrollY = window.scrollY;
